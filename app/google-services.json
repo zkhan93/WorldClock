@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "450288441746",
+    "firebase_url": "https://worldclock-7755c.firebaseio.com",
+    "project_id": "worldclock-7755c",
+    "storage_bucket": "worldclock-7755c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:450288441746:android:8b32e8f9dd077f91",
+        "android_client_info": {
+          "package_name": "anonestep.com.worldclock"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "450288441746-qalqhu32qvlge8ndbp0q2q9pb9nbj4qr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBByELfNfgAXWf-iLo8sR6mG32R37PzbFk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

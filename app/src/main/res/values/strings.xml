@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">WorldClock</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_settings">Settings</string>
+    <string name="pref_time_key">is24Hour</string>
+    <string name="hour_24">24 Hour</string>
+    <string name="hour_12">12 Hour</string>
+    <string name="pref_time_tittle">Use 24-hour format</string>
+    <string name="time_zone_list_app_id">ca-app-pub-2496362595567807/3506075573</string>
+    <string name="app_unit_id">ca-app-pub-2496362595567807/9669177174</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="title_activity_widget_customization">WidgetCustomizationActivity</string>
+    <string name="widget_background">Widget Background</string>
+    <string name="widget_color">Widget Color</string>
+    <string name="text_color">Text Color</string>
+</resources>
