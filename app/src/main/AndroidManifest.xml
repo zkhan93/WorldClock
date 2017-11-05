@@ -49,6 +49,7 @@
                 <action android:name="anddroid.appwidget.action.APPWIDGET_CONFIGURATION"/>
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

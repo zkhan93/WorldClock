@@ -1,17 +1,14 @@
 package anonestep.com.worldclock;
 
 import android.appwidget.AppWidgetManager;
-import android.content.ContentValues;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
 import android.icu.util.TimeZone;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -19,25 +16,29 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
+import android.widget.EditText;
 import android.widget.RemoteViews;
 import android.widget.TextClock;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.util.Calendar;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
-import anonestep.com.worldclock.Adapter.TimeZoneTextStyleAdapter;
+import anonestep.com.worldclock.Adapter.TextStyleAdapter;
+import anonestep.com.worldclock.Adapter.TimeZoneAdapter;
 import anonestep.com.worldclock.Adapter.WidgetTextColorSelectorAdapter;
-import anonestep.com.worldclock.DbContract.DbContract;
-import anonestep.com.worldclock.DbContract.DbHelper;
 import anonestep.com.worldclock.Listener.TextStyleSelectorListener;
+import anonestep.com.worldclock.Listener.TimeZoneClickListener;
 import anonestep.com.worldclock.Listener.WidgetTextColorSelectorListener;
 
 public class WidgetCustomizationActivity extends AppCompatActivity implements
-        WidgetTextColorSelectorListener, TextStyleSelectorListener {
-
+        WidgetTextColorSelectorListener, TextStyleSelectorListener, TimeZoneClickListener {
+    public static String TAG = WidgetCustomizationActivity.class.getSimpleName();
+    public static String PREF_KEY_WIDGET_COLOR = "WIDGET_COLOR_%d";
+    public static String PREF_KEY_WIDGET_FONT = "WIDGET_FONT_%d";
+    public static String PREF_KEY_WIDGET_TIMZONE = "WIDGET_TIMEZONE_%d";
+    public static String PREF_KEY_WIDGET_LABEL = "WIDGET_LABEL_%d";
     int[] colorIds = {
             R.color.colorPrimary,
             R.color.colorPrimaryDark,
@@ -71,10 +72,10 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
             "Xiomara-Script.ttf"};
 
     int colorPosition = 0, fontPosition = 0;
+    String currentTimeZoneId;
     TextView mTimeZone, mDate, mAmPm, mWeekDay;
+    EditText customLabel;
     TextClock mTextClock;
-    SQLiteDatabase mSqLiteDatabase;
-    DbHelper dbHelper;
     int mAppWidgetId;
 
     @Override
@@ -86,14 +87,13 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
       /*  Intent intent = getIntent();
         String timeZoneId = intent.getStringExtra(DbContract.TimeZoneEntry.TIME_ZONE_ID);
         final int timeZoneDbId = intent.getIntExtra(DbContract.TimeZoneEntry._ID, 1);
-*/
-        mTimeZone = (TextView) findViewById(R.id.timeZone);
-        mDate = (TextView) findViewById(R.id.date);
-        mAmPm = (TextView) findViewById(R.id.am_pm);
-        mWeekDay = (TextView) findViewById(R.id.weekDay);
-
-        mTextClock = (TextClock) findViewById(R.id.time_clock);
-
+//*/
+        mTimeZone = findViewById(R.id.timeZone);
+        mDate = findViewById(R.id.date);
+        mAmPm = findViewById(R.id.am_pm);
+        mWeekDay = findViewById(R.id.weekDay);
+        mTextClock = findViewById(R.id.time_clock);
+        customLabel = findViewById(R.id.customLabel);
         Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
         if (bundle != null) {
@@ -101,68 +101,75 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
                     AppWidgetManager.EXTRA_APPWIDGET_ID,
                     AppWidgetManager.INVALID_APPWIDGET_ID);
         }
-        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm E a");
-        Date date = new Date();
-        String dateString = dateFormat.format(date);
-        String dateArray[] = dateString.split(" ");
 
-  /*      dateFormat.setTimeZone(TimeZone.getTimeZone(timeZoneId));
-        mAmPm.setText(dateArray[3] + " ");
-        mWeekDay.setText(dateArray[2] + " ");
-        mTextClock.setTimeZone(timeZoneId);
-        mTimeZone.setText(TimeZone.getTimeZone(timeZoneId).getDisplayName());
+        currentTimeZoneId = TimeZone.getDefault().getID();
+
+        DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy E a");
+        dateFormat.setTimeZone(TimeZone.getTimeZone(currentTimeZoneId));
+
+        String dateArray[] = dateFormat.format(new Date()).split(" ");
+
         mDate.setText(dateArray[0]);
-*/
-        RecyclerView mTextColorRecyclerView = (RecyclerView) findViewById(R.id.text_color_recyclerview);
+        mWeekDay.setText(dateArray[1] + " ");
+        mAmPm.setText(dateArray[2] + " ");
+        mTextClock.setTimeZone(currentTimeZoneId);
+        mTimeZone.setText(TimeZone.getTimeZone(currentTimeZoneId).getDisplayName());
+
+        RecyclerView mTextColorRecyclerView = findViewById(R.id.text_color_recyclerview);
         mTextColorRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext(),
                 LinearLayoutManager.HORIZONTAL, false));
-        WidgetTextColorSelectorAdapter textColorSelectorAdapter = new WidgetTextColorSelectorAdapter(getBaseContext(), colorIds);
-
+        WidgetTextColorSelectorAdapter textColorSelectorAdapter = new
+                WidgetTextColorSelectorAdapter(getBaseContext(), colorIds);
         textColorSelectorAdapter.setWidgetTextColorSelectorListener(this);
         mTextColorRecyclerView.setAdapter(textColorSelectorAdapter);
 
 
-        RecyclerView mTextStyleRecyclerView = (RecyclerView) findViewById(R.id.text_style_recyclerview);
+        RecyclerView mTextStyleRecyclerView = findViewById(R.id.text_style_recyclerview);
         mTextStyleRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext(),
                 LinearLayoutManager.HORIZONTAL, false));
-        TimeZoneTextStyleAdapter mTimeZoneTextStyleAdapter = new TimeZoneTextStyleAdapter(getBaseContext(), fonts);
-        mTextStyleRecyclerView.setAdapter(mTimeZoneTextStyleAdapter);
-        mTimeZoneTextStyleAdapter.setWidgetTextStycleClickListener(this);
+        TextStyleAdapter mTextStyleAdapter = new TextStyleAdapter
+                (getBaseContext(), fonts);
+        mTextStyleAdapter.setWidgetTextStycleClickListener(this);
+        mTextStyleRecyclerView.setAdapter(mTextStyleAdapter);
+
+        RecyclerView mTimezoneRecyclerView = findViewById(R.id.timezone_recyclerview);
+        mTimezoneRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext(),
+                LinearLayoutManager.HORIZONTAL, false));
+        List<String> timeZones = Arrays.asList(TimeZone
+                .getAvailableIDs());
+        TimeZoneAdapter mTimeZoneAdapter = new TimeZoneAdapter(timeZones,
+                this);
+        mTimezoneRecyclerView.setAdapter(mTimeZoneAdapter);
 
 
-        textColorSelectorAdapter.setWidgetTextColorSelectorListener(this);
-        mTextColorRecyclerView.setAdapter(textColorSelectorAdapter);
-
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-  /*              dbHelper = new DbHelper(getBaseContext());
-                ContentValues contentValues = new ContentValues();
-                contentValues.put(DbContract.WidgetEntry.TIME_ZONE_ID, timeZoneDbId);
-                contentValues.put(DbContract.WidgetEntry.WIDGET_COLOR_ID, colorIds[colorPosition]);
-                contentValues.put(DbContract.WidgetEntry.WIDGET_FONT_ID, fonts[fontPosition]);
-                mSqLiteDatabase = dbHelper.getWritableDatabase();
-                long id = mSqLiteDatabase.insert(DbContract.WidgetEntry.TABLE_WIDGET, null, contentValues);
-                if (id != 0) {
-                    Toast.makeText(getBaseContext(), "Widget Added", Toast.LENGTH_LONG).show();
-                    mSqLiteDatabase.close();
-                } else {
-                    Toast.makeText(getBaseContext(), "Widget Not Added", Toast.LENGTH_LONG).show();
-                }*/
-                DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy HH:mm E a");
-                Date date = new Date();
-                String dateString = dateFormat.format(date);
-                String dateArray[] = dateString.split(" ");
 
-                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(getBaseContext());
-                RemoteViews views = new RemoteViews(getBaseContext().getPackageName(), R.layout.new_app_widget);
+                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance
+                        (WidgetCustomizationActivity.this);
+                RemoteViews views = new RemoteViews(WidgetCustomizationActivity.this
+                        .getApplicationContext()
+                        .getPackageName(), R.layout.new_app_widget);
+                Bitmap image = ClockWidget.getContentBitmap(WidgetCustomizationActivity.this,
+                        getColor
+                                (colorIds[colorPosition]),
+                        fonts[fontPosition], currentTimeZoneId, customLabel.getText().toString());
+                views.setImageViewBitmap(R.id.canvas, image);
+                PreferenceManager.getDefaultSharedPreferences(WidgetCustomizationActivity.this
+                        .getApplicationContext())
+                        .edit().putInt(String.format(PREF_KEY_WIDGET_COLOR, mAppWidgetId),
+                        getColor(colorIds[colorPosition])).putString(String.format
+                        (PREF_KEY_WIDGET_FONT,
+                        mAppWidgetId), fonts[fontPosition]).putString(String.format
+                        (PREF_KEY_WIDGET_TIMZONE, mAppWidgetId), currentTimeZoneId).putString
+                        (String.format
+                                (PREF_KEY_WIDGET_LABEL, mAppWidgetId), customLabel.getText()
+                                .toString())
+                        .commit();
 
-                views.setImageViewBitmap(R.id.timeZone,buildUpdate("India"));
-                views.setImageViewBitmap(R.id.am_pm, buildUpdate(dateArray[3]));
-                views.setTextViewText(R.id.weekDay, dateArray[2]);
-                views.setTextViewText(R.id.date, dateArray[0]);
+                Log.d(TAG, "created onfig for widget: " + mAppWidgetId);
                 appWidgetManager.updateAppWidget(mAppWidgetId, views);
                 Intent resultValue = new Intent();
                 resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
@@ -172,32 +179,15 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
         });
     }
 
-
-
-    public Bitmap buildUpdate(String time)
-    {
-        Bitmap myBitmap = Bitmap.createBitmap(160, 84, Bitmap.Config.ARGB_4444);
-        Canvas myCanvas = new Canvas(myBitmap);
-        Paint paint = new Paint();
-        Typeface clock = Typeface.createFromAsset(this.getAssets(),"fonts/MonospaceTypewriter.ttf");
-        paint.setAntiAlias(true);
-        paint.setSubpixelText(true);
-        paint.setTypeface(clock);
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(colorIds[colorPosition]);
-        paint.setTextSize(65);
-        paint.setTextAlign(Paint.Align.CENTER);
-        myCanvas.drawText(time, 80, 60, paint);
-        return myBitmap;
-    }
-
-
     @Override
     public void onWidgetTextColorSelect(int position) {
         colorPosition = position;
         mTimeZone.setTextColor(ContextCompat.getColor(getBaseContext(), colorIds[position]));
         mTextClock.setTextColor(ContextCompat.getColor(getBaseContext(), colorIds[position]));
         mDate.setTextColor(ContextCompat.getColor(getBaseContext(), colorIds[position]));
+        mWeekDay.setTextColor(ContextCompat.getColor(getBaseContext(), colorIds[position]));
+        mAmPm.setTextColor(ContextCompat.getColor(getBaseContext(), colorIds[position]));
+
     }
 
     @Override
@@ -209,6 +199,13 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
         mDate.setTypeface(custom_font);
         mWeekDay.setTypeface(custom_font);
         mAmPm.setTypeface(custom_font);
+    }
+
+    @Override
+    public void onTimeZoneClick(String timeZoneId) {
+        currentTimeZoneId = timeZoneId;
+        if (mTimeZone != null)
+            mTimeZone.setText(timeZoneId);
     }
 }
 

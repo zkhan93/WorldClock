@@ -18,14 +18,14 @@ import anonestep.com.worldclock.WidgetCustomizationActivity;
  * Created by Madhur Jain on 8/21/2017.
  */
 
-public class TimeZoneTextStyleAdapter extends RecyclerView.Adapter<TimeZoneTextStyleViewHolder> {
+public class TextStyleAdapter extends RecyclerView.Adapter<TimeZoneTextStyleViewHolder> {
 
     String[] fontStyle;
     private TextStyleSelectorListener mTextStyleClickListener;
     Context context;
     String mTimeZoneId;
 
-    public TimeZoneTextStyleAdapter(Context context, String[] fontStyle) {
+    public TextStyleAdapter(Context context, String[] fontStyle) {
         this.fontStyle = fontStyle;
         this.context = context;
         //this.mTimeZoneId =mTimeZoneId;

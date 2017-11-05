@@ -1,13 +1,12 @@
 package anonestep.com.worldclock;
 
 import android.icu.util.TimeZone;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.util.Log;
-
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -16,8 +15,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import anonestep.com.worldclock.Adapter.TimeZoneAdapter;
+import anonestep.com.worldclock.DialogFragment.SaveConfirmationDialog;
+import anonestep.com.worldclock.Listener.TimeZoneClickListener;
 
-public class TimeZoneListActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
+public class TimeZoneListActivity extends AppCompatActivity implements SearchView
+        .OnQueryTextListener, TimeZoneClickListener {
 
     RecyclerView timeZoneRecyclerView;
     TimeZoneAdapter adapter;
@@ -32,7 +34,8 @@ public class TimeZoneListActivity extends AppCompatActivity implements SearchVie
         setContentView(R.layout.activity_time_zone_list);
         adView = (AdView) findViewById(R.id.time_zone_list_AdView);
 
-        AdRequest adRequest = new AdRequest.Builder().addTestDevice("C4CA5449817AAA2AB35F00AED48D06E0")
+        AdRequest adRequest = new AdRequest.Builder().addTestDevice
+                ("C4CA5449817AAA2AB35F00AED48D06E0")
                 .addTestDevice(AdRequest.DEVICE_ID_EMULATOR).build();
         adView.loadAd(adRequest);
 
@@ -42,8 +45,15 @@ public class TimeZoneListActivity extends AppCompatActivity implements SearchVie
         searchView.setOnQueryTextListener(this);
         timeZoneRecyclerView = (RecyclerView) findViewById(R.id.timezoneRecyclerView);
         timeZoneRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
-        adapter = new TimeZoneAdapter(timeZoneIdList, getSupportFragmentManager());
+        adapter = new TimeZoneAdapter(timeZoneIdList, this);
         timeZoneRecyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void onTimeZoneClick(String timeZoneId) {
+        SaveConfirmationDialog saveConfirmationDialog = SaveConfirmationDialog.newInstance
+                (timeZoneId);
+        saveConfirmationDialog.show(getSupportFragmentManager(), "Save Profile");
     }
 
     @Override

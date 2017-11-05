@@ -14,4 +14,5 @@
     <string name="widget_background">Widget Background</string>
     <string name="widget_color">Widget Color</string>
     <string name="text_color">Text Color</string>
+    <string name="timezone">Timezone</string>
 </resources>
