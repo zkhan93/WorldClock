@@ -1,7 +1,9 @@
 package anonestep.com.worldclock;
 
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.icu.text.DateFormat;
@@ -95,13 +97,14 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
         mTextClock = findViewById(R.id.time_clock);
         customLabel = findViewById(R.id.customLabel);
         Intent intent = getIntent();
-        Bundle bundle = intent.getExtras();
+        final Bundle bundle = intent.getExtras();
         if (bundle != null) {
             mAppWidgetId = bundle.getInt(
                     AppWidgetManager.EXTRA_APPWIDGET_ID,
                     AppWidgetManager.INVALID_APPWIDGET_ID);
         }
 
+        Log.d(TAG, "confguration activity called for: " + mAppWidgetId);
         currentTimeZoneId = TimeZone.getDefault().getID();
 
         DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy E a");
@@ -157,12 +160,21 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
                                 (colorIds[colorPosition]),
                         fonts[fontPosition], currentTimeZoneId, customLabel.getText().toString());
                 views.setImageViewBitmap(R.id.canvas, image);
+                Intent intent = new Intent(WidgetCustomizationActivity.this,
+                        WidgetCustomizationActivity.class);
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId);
+                PendingIntent pendingIntent = PendingIntent.getActivity
+                        (WidgetCustomizationActivity.this,
+                                mAppWidgetId, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                views.setOnClickPendingIntent(R.id.canvas, pendingIntent);
+                Log.d(TAG, "saving color: " + getColor(colorIds[colorPosition]) + " for: " +
+                        mAppWidgetId);
                 PreferenceManager.getDefaultSharedPreferences(WidgetCustomizationActivity.this
                         .getApplicationContext())
                         .edit().putInt(String.format(PREF_KEY_WIDGET_COLOR, mAppWidgetId),
                         getColor(colorIds[colorPosition])).putString(String.format
                         (PREF_KEY_WIDGET_FONT,
-                        mAppWidgetId), fonts[fontPosition]).putString(String.format
+                                mAppWidgetId), fonts[fontPosition]).putString(String.format
                         (PREF_KEY_WIDGET_TIMZONE, mAppWidgetId), currentTimeZoneId).putString
                         (String.format
                                 (PREF_KEY_WIDGET_LABEL, mAppWidgetId), customLabel.getText()
@@ -177,6 +189,37 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
                 finish();
             }
         });
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences
+                (this.getApplicationContext());
+        if (sharedPreferences.contains(String.format(PREF_KEY_WIDGET_COLOR, mAppWidgetId))) {
+            long color = sharedPreferences.getInt(String.format(PREF_KEY_WIDGET_COLOR,
+                    mAppWidgetId), -1);
+            Log.d(TAG, "loaded color: " + color + " for: " + mAppWidgetId);
+            for (int i = 0; i < colorIds.length; i++)
+                if (getColor(colorIds[i]) == color) {
+                    onWidgetTextColorSelect(i);
+                    Log.d(TAG, "color was at: " + i);
+                    break;
+                }
+        }
+
+        String fontName = sharedPreferences.getString(String.format(PREF_KEY_WIDGET_FONT,
+                mAppWidgetId),
+                null);
+        String label = sharedPreferences.getString(String.format(PREF_KEY_WIDGET_LABEL,
+                mAppWidgetId),
+                null);
+        String timeZoneId = sharedPreferences.getString(String.format(PREF_KEY_WIDGET_TIMZONE,
+                mAppWidgetId), null);
+
+        if (fontName != null)
+            for (int i = 0; i < fonts.length; i++)
+                if (fontName.equals(fonts[i]))
+                    OnTextStyleSelect(i);
+        if (timeZoneId != null)
+            onTimeZoneClick(timeZoneId);
+        if (label != null)
+            customLabel.setText(label);
     }
 
     @Override

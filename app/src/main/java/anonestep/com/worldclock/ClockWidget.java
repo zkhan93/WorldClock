@@ -16,6 +16,7 @@ import android.graphics.Typeface;
 import android.icu.text.DateFormat;
 import android.icu.text.SimpleDateFormat;
 import android.icu.util.TimeZone;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -41,7 +42,7 @@ public class ClockWidget extends AppWidgetProvider {
         RemoteViews views = new RemoteViews(context.getApplicationContext().getPackageName(), R
                 .layout.new_app_widget);
 
-        int colorCode;
+        long colorCode;
         String fontName;
         String timeZoneId, label;
 
@@ -56,7 +57,7 @@ public class ClockWidget extends AppWidgetProvider {
         timeZoneId = sharedPreferences.getString(String.format(PREF_KEY_WIDGET_TIMZONE,
                 appWidgetId), null);
         if (fontName != null && timeZoneId != null)
-            views.setImageViewBitmap(R.id.canvas, getContentBitmap(context, colorCode,
+            views.setImageViewBitmap(R.id.canvas, getContentBitmap(context, (int)colorCode,
                     fontName, timeZoneId, label));
         return views;
     }
@@ -205,10 +206,8 @@ public class ClockWidget extends AppWidgetProvider {
         int interval = 60000;
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (alarmManager != null) {
-            alarmManager.set(AlarmManager.RTC, ((System.currentTimeMillis() / interval) *
-                    interval + interval), pending);
-            Log.d(TAG, String.format("repeating alarm set on %d", Calendar.getInstance()
-                    .getTimeInMillis() + interval));
+            alarmManager.set(AlarmManager.RTC, ((System.currentTimeMillis() / interval) * interval + interval), pending);
+            Log.d(TAG, String.format("repeating alarm set on %d", Calendar.getInstance().getTimeInMillis() + interval));
         }
     }
 
@@ -233,6 +232,12 @@ public class ClockWidget extends AppWidgetProvider {
             setAlarm(context);
         }
         super.onReceive(context, intent);
+    }
+
+    @Override
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int
+            appWidgetId, Bundle newOptions) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
     }
 }
 
