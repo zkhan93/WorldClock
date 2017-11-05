@@ -28,26 +28,29 @@ import anonestep.com.worldclock.ViewHolder.TimeZoneViewHolder;
  * Created by Madhur Jain on 4/23/2017.
  */
 
-public class TimeZoneAdapter extends RecyclerView.Adapter<TimeZoneViewHolder>{
+public class TimeZoneAdapter extends RecyclerView.Adapter<TimeZoneViewHolder> {
 
     List<String> timeZoneIdList;
     TimeZoneClickListener itemClickListener;
+    int layoutResource;
 
-    public TimeZoneAdapter(List<String> timeZoneIdList, TimeZoneClickListener itemClickListener) {
+    public TimeZoneAdapter(List<String> timeZoneIdList, TimeZoneClickListener itemClickListener,
+                           int layoutResource) {
         this.timeZoneIdList = timeZoneIdList;
         this.itemClickListener = itemClickListener;
+        this.layoutResource = layoutResource;
     }
 
     @Override
     public TimeZoneViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.time_zone_card, parent, false);
-        return new TimeZoneViewHolder(view,itemClickListener);
+        View view = LayoutInflater.from(parent.getContext()).inflate(layoutResource, parent, false);
+        return new TimeZoneViewHolder(view, itemClickListener);
     }
 
 
     @Override
     public void onBindViewHolder(TimeZoneViewHolder holder, int position) {
-       holder.setTimeZone(timeZoneIdList.get(position));
+        holder.setTimeZone(timeZoneIdList.get(position));
     }
 
     @Override

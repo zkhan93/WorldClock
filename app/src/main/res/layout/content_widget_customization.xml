@@ -42,19 +42,32 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="vertical"
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingBottom="8dp"
-            android:paddingLeft="@dimen/default_padding"
-            android:paddingTop="8dp"
-            android:text="@string/timezone"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:paddingLeft="@dimen/default_padding"
+                android:paddingTop="8dp"
+                android:text="@string/timezone"/>
+
+            <android.support.v7.widget.SearchView
+                android:id="@+id/searchBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:queryHint="Search Time Zone here" />
+        </LinearLayout>
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/timezone_recyclerview"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            tools:orientation="horizontal"
+            tools:listitem="@layout/listitem_time_zone"/>
 
     </LinearLayout>
 

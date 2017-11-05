@@ -45,7 +45,7 @@ public class TimeZoneListActivity extends AppCompatActivity implements SearchVie
         searchView.setOnQueryTextListener(this);
         timeZoneRecyclerView = (RecyclerView) findViewById(R.id.timezoneRecyclerView);
         timeZoneRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
-        adapter = new TimeZoneAdapter(timeZoneIdList, this);
+        adapter = new TimeZoneAdapter(timeZoneIdList, this,R.layout.time_zone_card);
         timeZoneRecyclerView.setAdapter(adapter);
     }
 

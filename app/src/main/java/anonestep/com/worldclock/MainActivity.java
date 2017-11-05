@@ -45,9 +45,9 @@ public class MainActivity extends AppCompatActivity implements DeleteConfirmatio
 
         dbHelper = new DbHelper(getBaseContext());
         mSqLiteDatabase = dbHelper.getReadableDatabase();
-        actionSettingImage = (ImageView) findViewById(R.id.actionSettings);
-        timeZoneTV = (TextView) findViewById(R.id.defaulttimezone);
-        textClock = (TextClock) findViewById(R.id.textClock);
+        actionSettingImage = findViewById(R.id.actionSettings);
+        timeZoneTV = findViewById(R.id.defaulttimezone);
+        textClock = findViewById(R.id.textClock);
         Calendar cal = Calendar.getInstance();
         timeZoneTV.setText(cal.getTimeZone().getDisplayName());
 

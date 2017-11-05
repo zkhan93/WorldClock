@@ -16,6 +16,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -23,9 +24,13 @@ import android.widget.RemoteViews;
 import android.widget.TextClock;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import anonestep.com.worldclock.Adapter.TextStyleAdapter;
 import anonestep.com.worldclock.Adapter.TimeZoneAdapter;
@@ -35,8 +40,10 @@ import anonestep.com.worldclock.Listener.TimeZoneClickListener;
 import anonestep.com.worldclock.Listener.WidgetTextColorSelectorListener;
 
 public class WidgetCustomizationActivity extends AppCompatActivity implements
-        WidgetTextColorSelectorListener, TextStyleSelectorListener, TimeZoneClickListener {
+        WidgetTextColorSelectorListener, TextStyleSelectorListener, TimeZoneClickListener,
+        SearchView.OnQueryTextListener {
     public static String TAG = WidgetCustomizationActivity.class.getSimpleName();
+    public static String PREF_KEY_FAV_TIMEZONES = "FAV_TIMEZONES";
     public static String PREF_KEY_WIDGET_COLOR = "WIDGET_COLOR_%d";
     public static String PREF_KEY_WIDGET_FONT = "WIDGET_FONT_%d";
     public static String PREF_KEY_WIDGET_TIMZONE = "WIDGET_TIMEZONE_%d";
@@ -78,7 +85,10 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
     TextView mTimeZone, mDate, mAmPm, mWeekDay;
     EditText customLabel;
     TextClock mTextClock;
+    SearchView searchView;
     int mAppWidgetId;
+    private TimeZoneAdapter mTimeZoneAdapter;
+    private List<String> timeZones;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +106,8 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
         mWeekDay = findViewById(R.id.weekDay);
         mTextClock = findViewById(R.id.time_clock);
         customLabel = findViewById(R.id.customLabel);
+        searchView = findViewById(R.id.searchBar);
+        searchView.setOnQueryTextListener(this);
         Intent intent = getIntent();
         final Bundle bundle = intent.getExtras();
         if (bundle != null) {
@@ -138,10 +150,9 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
         RecyclerView mTimezoneRecyclerView = findViewById(R.id.timezone_recyclerview);
         mTimezoneRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext(),
                 LinearLayoutManager.HORIZONTAL, false));
-        List<String> timeZones = Arrays.asList(TimeZone
-                .getAvailableIDs());
-        TimeZoneAdapter mTimeZoneAdapter = new TimeZoneAdapter(timeZones,
-                this);
+        timeZones = Arrays.asList(TimeZone.getAvailableIDs());
+        mTimeZoneAdapter = new TimeZoneAdapter(timeZones,
+                this, R.layout.listitem_time_zone);
         mTimezoneRecyclerView.setAdapter(mTimeZoneAdapter);
 
 
@@ -169,9 +180,14 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
                 views.setOnClickPendingIntent(R.id.canvas, pendingIntent);
                 Log.d(TAG, "saving color: " + getColor(colorIds[colorPosition]) + " for: " +
                         mAppWidgetId);
-                PreferenceManager.getDefaultSharedPreferences(WidgetCustomizationActivity.this
-                        .getApplicationContext())
-                        .edit().putInt(String.format(PREF_KEY_WIDGET_COLOR, mAppWidgetId),
+                SharedPreferences sharedPreferences = PreferenceManager
+                        .getDefaultSharedPreferences(WidgetCustomizationActivity.this
+                                .getApplicationContext());
+                Set<String> favTimeZoneIds = sharedPreferences.getStringSet(PREF_KEY_FAV_TIMEZONES,
+                        new HashSet<String>());
+                favTimeZoneIds.add(currentTimeZoneId);
+
+                sharedPreferences.edit().putInt(String.format(PREF_KEY_WIDGET_COLOR, mAppWidgetId),
                         getColor(colorIds[colorPosition])).putString(String.format
                         (PREF_KEY_WIDGET_FONT,
                                 mAppWidgetId), fonts[fontPosition]).putString(String.format
@@ -179,6 +195,7 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
                         (String.format
                                 (PREF_KEY_WIDGET_LABEL, mAppWidgetId), customLabel.getText()
                                 .toString())
+                        .putStringSet(PREF_KEY_FAV_TIMEZONES, favTimeZoneIds)
                         .commit();
 
                 Log.d(TAG, "created onfig for widget: " + mAppWidgetId);
@@ -249,6 +266,37 @@ public class WidgetCustomizationActivity extends AppCompatActivity implements
         currentTimeZoneId = timeZoneId;
         if (mTimeZone != null)
             mTimeZone.setText(timeZoneId);
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        Log.d(TAG, "onQueryTextSubmit: " + query.toLowerCase());
+        filterTimezones(query.toLowerCase());
+        return true;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        Log.d(TAG, "onQueryTextChange: " + newText);
+        filterTimezones(newText);
+        return true;
+    }
+
+    private void filterTimezones(String text) {
+        if (text != null && !text.isEmpty()) {
+            text = text.toLowerCase();
+            ArrayList<String> zoneIdList = new ArrayList<>();
+            for (String timeZone : this.timeZones) {
+                String displayName = TimeZone.getTimeZone(timeZone).getDisplayName().toLowerCase();
+                if (displayName.contains(text)) {
+                    zoneIdList.add(timeZone);
+                } else if (timeZone.toLowerCase().contains(text)) {
+                    zoneIdList.add(timeZone);
+                }
+            }
+            Log.d(TAG, zoneIdList.size() + " ");
+            mTimeZoneAdapter.setFilter(zoneIdList);
+        }
     }
 }
 
